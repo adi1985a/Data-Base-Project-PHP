@@ -1,4 +1,7 @@
 <?php
+// Include database configuration
+require_once 'config.php';
+
 if ($_SERVER["REQUEST_METHOD"] == "POST") 
 {
     $host = 'localhost';

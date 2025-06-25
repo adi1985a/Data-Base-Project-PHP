@@ -1,60 +1,50 @@
 <?php
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $host = 'localhost';
-    $dbname = 'test';
-    $username = 'root';
-    $password = 'haslo';
+session_start();
+
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['modify_view'])) {
+    // Include database configuration
+    require_once 'config.php';
 
     try {
-        $pdo = new PDO("mysql:host=$host;dbname=$dbname", $username, $password);
-        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        $pdo = getDBConnection();
 
-        if (isset($_POST['add_user'])) {
-            // Kod dla dodawania użytkownika (bez zmian)
-        } elseif (isset($_POST['modify_view'])) {
-            $table_name = isset($_POST['table_name']) ? $_POST['table_name'] : '';
-            $columns = isset($_POST['columns']) ? $_POST['columns'] : '';
+        $table_name = trim($_POST['table_name']);
+        $columns = trim($_POST['columns']);
 
-            if (!empty($table_name) && !empty($columns)) {
-                $result = createViewSQL($pdo, $table_name, $columns);
-                echo $result;
-            } else {
-                echo "Proszę uzupełnić wszystkie pola formularza.";
+        // Validation
+        if (empty($table_name) || empty($columns)) {
+            throw new Exception("All fields are required!");
+        }
+
+        // Validate table name (only letters, numbers, and underscores)
+        if (!preg_match('/^[a-zA-Z0-9_]+$/', $table_name)) {
+            throw new Exception("Invalid table name! Use only letters, numbers, and underscores.");
+        }
+
+        // Validate columns
+        $allowed_columns = ['subscriber_name', 'action_performed', 'date_added', 'id'];
+        $column_array = array_map('trim', explode(',', $columns));
+        
+        foreach ($column_array as $col) {
+            if (!in_array($col, $allowed_columns)) {
+                throw new Exception("Invalid column: $col. Allowed columns: " . implode(', ', $allowed_columns));
             }
         }
-    } catch (PDOException $e) {
-        echo "Błąd: " . $e->getMessage();
-    }
-}
 
-function createViewSQL($pdo, $table_name, $columns) {
-    try {
-        // Zamieniamy przekazane kolumny na tablicę
-        $selected_columns = explode(', ', $columns);
-
-        // Tworzymy aliasy dla kolumn, aby uniknąć konfliktów
-        $column_aliases = array_map(function ($column) {
-            return "`$column` AS `col$column`";
-        }, $selected_columns);
-
-        // Łączymy aliasy kolumn w zapytanie SQL
-        $select_clause = implode(', ', $column_aliases);
-
-        // Tworzymy dynamiczne zapytanie SQL
-        $sql = "CREATE OR REPLACE VIEW $table_name AS SELECT $select_clause FROM audit_subscribers";
-
-        // Wykonujemy zapytanie SQL
+        // Create or replace view
+        $columns_sql = implode(', ', $column_array);
+        $sql = "CREATE OR REPLACE VIEW {$table_name}_view AS SELECT {$columns_sql} FROM audit_subscribers";
+        
         $pdo->exec($sql);
 
-        return "Widok został pomyślnie zaktualizowany.";
-    } catch (PDOException $e) {
-        return "Błąd: " . $e->getMessage();
+        $_SESSION['view_result'] = "View '{$table_name}_view' has been successfully created/updated!";
+        
+    } catch (Exception $e) {
+        $_SESSION['view_error'] = $e->getMessage();
     }
 }
 
-
-
-
-
-
+// Redirect back to index
+header("Location: index.php");
+exit();
 ?>

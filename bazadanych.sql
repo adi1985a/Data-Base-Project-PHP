@@ -3,9 +3,9 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Czas generowania: 30 Lis 2023, 21:55
--- Wersja serwera: 10.4.27-MariaDB
--- Wersja PHP: 8.1.12
+-- Generation Time: 30 Nov 2023, 21:55
+-- Server version: 10.4.27-MariaDB
+-- PHP Version: 8.1.12
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -18,13 +18,13 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Baza danych: `test`
+-- Database: `test`
 --
 
 -- --------------------------------------------------------
 
 --
--- Struktura tabeli dla tabeli `audit_subscribers`
+-- Table structure for table `audit_subscribers`
 --
 
 CREATE TABLE `audit_subscribers` (
@@ -35,7 +35,7 @@ CREATE TABLE `audit_subscribers` (
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 
 --
--- Zrzut danych tabeli `audit_subscribers`
+-- Dumping data for table `audit_subscribers`
 --
 
 INSERT INTO `audit_subscribers` (`id`, `subscriber_name`, `action_performed`, `date_added`) VALUES
@@ -71,7 +71,7 @@ INSERT INTO `audit_subscribers` (`id`, `subscriber_name`, `action_performed`, `d
 -- --------------------------------------------------------
 
 --
--- Struktura tabeli dla tabeli `subscribers`
+-- Table structure for table `subscribers`
 --
 
 CREATE TABLE `subscribers` (
@@ -81,7 +81,7 @@ CREATE TABLE `subscribers` (
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 
 --
--- Zrzut danych tabeli `subscribers`
+-- Dumping data for table `subscribers`
 --
 
 INSERT INTO `subscribers` (`id`, `fname`, `email`) VALUES
@@ -96,7 +96,7 @@ INSERT INTO `subscribers` (`id`, `fname`, `email`) VALUES
 (13, 'sdaf', 'edgwf32@wp.pl');
 
 --
--- Wyzwalacze `subscribers`
+-- Triggers `subscribers`
 --
 DELIMITER $$
 CREATE TRIGGER `after_subscriber_delete` AFTER DELETE ON `subscribers` FOR EACH ROW BEGIN
@@ -132,22 +132,22 @@ DELIMITER ;
 -- --------------------------------------------------------
 
 --
--- Zastąpiona struktura widoku `usunieci_data_dod_i_usun`
--- (Zobacz poniżej rzeczywisty widok)
+-- Replaced structure for view `deleted_users_add_and_delete_dates`
+-- (See below for the actual view)
 --
-CREATE TABLE `usunieci_data_dod_i_usun` (
+CREATE TABLE `deleted_users_add_and_delete_dates` (
 `subscriber_name` varchar(255)
-,`date_dodania` timestamp
-,`date_usuniecia` timestamp
+,`date_added` timestamp
+,`date_deleted` timestamp
 );
 
 -- --------------------------------------------------------
 
 --
--- Zastąpiona struktura widoku `widok_edycji_uzytkownikow`
--- (Zobacz poniżej rzeczywisty widok)
+-- Replaced structure for view `user_edits_view`
+-- (See below for the actual view)
 --
-CREATE TABLE `widok_edycji_uzytkownikow` (
+CREATE TABLE `user_edits_view` (
 `subscriber_name` varchar(255)
 ,`date_last_edited` timestamp
 );
@@ -155,32 +155,10 @@ CREATE TABLE `widok_edycji_uzytkownikow` (
 -- --------------------------------------------------------
 
 --
--- Zastąpiona struktura widoku `widok_istniejacych_uzytkownikow`
--- (Zobacz poniżej rzeczywisty widok)
+-- Replaced structure for view `existing_users_view`
+-- (See below for the actual view)
 --
-CREATE TABLE `widok_istniejacych_uzytkownikow` (
-`subscriber_name` varchar(255)
-,`date_dodania` timestamp
-);
-
--- --------------------------------------------------------
-
---
--- Zastąpiona struktura widoku `widok_usunieci_uzytkownicy`
--- (Zobacz poniżej rzeczywisty widok)
---
-CREATE TABLE `widok_usunieci_uzytkownicy` (
-`subscriber_name` varchar(255)
-,`date_deleted` timestamp
-);
-
--- --------------------------------------------------------
-
---
--- Zastąpiona struktura widoku `widok_uzytkownicy`
--- (Zobacz poniżej rzeczywisty widok)
---
-CREATE TABLE `widok_uzytkownicy` (
+CREATE TABLE `existing_users_view` (
 `subscriber_name` varchar(255)
 ,`date_added` timestamp
 );
@@ -188,76 +166,98 @@ CREATE TABLE `widok_uzytkownicy` (
 -- --------------------------------------------------------
 
 --
--- Struktura widoku `usunieci_data_dod_i_usun`
+-- Replaced structure for view `deleted_users_view`
+-- (See below for the actual view)
 --
-DROP TABLE IF EXISTS `usunieci_data_dod_i_usun`;
-
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `usunieci_data_dod_i_usun`  AS SELECT `a`.`subscriber_name` AS `subscriber_name`, `a`.`date_added` AS `date_dodania`, max(`b`.`date_added`) AS `date_usuniecia` FROM (`audit_subscribers` `a` join `audit_subscribers` `b` on(`a`.`subscriber_name` = `b`.`subscriber_name`)) WHERE `a`.`action_performed` = 'Insert a new subscriber' AND `b`.`action_performed` = 'Deleted a subscriber' GROUP BY `a`.`subscriber_name`, `a`.`date_added``date_added`  ;
+CREATE TABLE `deleted_users_view` (
+`subscriber_name` varchar(255)
+,`date_deleted` timestamp
+);
 
 -- --------------------------------------------------------
 
 --
--- Struktura widoku `widok_edycji_uzytkownikow`
+-- Replaced structure for view `users_view`
+-- (See below for the actual view)
 --
-DROP TABLE IF EXISTS `widok_edycji_uzytkownikow`;
-
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `widok_edycji_uzytkownikow`  AS SELECT `audit_subscribers`.`subscriber_name` AS `subscriber_name`, max(`audit_subscribers`.`date_added`) AS `date_last_edited` FROM `audit_subscribers` WHERE `audit_subscribers`.`action_performed` = 'Updated a subscriber' OR `audit_subscribers`.`action_performed` = 'Updated a user' GROUP BY `audit_subscribers`.`subscriber_name``subscriber_name`  ;
+CREATE TABLE `users_view` (
+`subscriber_name` varchar(255)
+,`date_added` timestamp
+);
 
 -- --------------------------------------------------------
 
 --
--- Struktura widoku `widok_istniejacych_uzytkownikow`
+-- Structure for view `deleted_users_add_and_delete_dates`
 --
-DROP TABLE IF EXISTS `widok_istniejacych_uzytkownikow`;
+DROP TABLE IF EXISTS `deleted_users_add_and_delete_dates`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `widok_istniejacych_uzytkownikow`  AS SELECT DISTINCT `a`.`subscriber_name` AS `subscriber_name`, `a`.`date_added` AS `date_dodania` FROM `audit_subscribers` AS `a` WHERE `a`.`action_performed` = 'Insert a new subscriber''Insert a new subscriber'  ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `deleted_users_add_and_delete_dates`  AS SELECT `a`.`subscriber_name` AS `subscriber_name`, `a`.`date_added` AS `date_added`, max(`b`.`date_added`) AS `date_deleted` FROM (`audit_subscribers` `a` join `audit_subscribers` `b` on(`a`.`subscriber_name` = `b`.`subscriber_name`)) WHERE `a`.`action_performed` = 'Insert a new subscriber' AND `b`.`action_performed` = 'Deleted a subscriber' GROUP BY `a`.`subscriber_name`, `a`.`date_added`  ;
 
 -- --------------------------------------------------------
 
 --
--- Struktura widoku `widok_usunieci_uzytkownicy`
+-- Structure for view `user_edits_view`
 --
-DROP TABLE IF EXISTS `widok_usunieci_uzytkownicy`;
+DROP TABLE IF EXISTS `user_edits_view`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `widok_usunieci_uzytkownicy`  AS SELECT `audit_subscribers`.`subscriber_name` AS `subscriber_name`, max(`audit_subscribers`.`date_added`) AS `date_deleted` FROM `audit_subscribers` WHERE `audit_subscribers`.`action_performed` = 'Deleted a subscriber' GROUP BY `audit_subscribers`.`subscriber_name``subscriber_name`  ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `user_edits_view`  AS SELECT `audit_subscribers`.`subscriber_name` AS `subscriber_name`, max(`audit_subscribers`.`date_added`) AS `date_last_edited` FROM `audit_subscribers` WHERE `audit_subscribers`.`action_performed` = 'Updated a subscriber' OR `audit_subscribers`.`action_performed` = 'Updated a user' GROUP BY `audit_subscribers`.`subscriber_name`  ;
 
 -- --------------------------------------------------------
 
 --
--- Struktura widoku `widok_uzytkownicy`
+-- Structure for view `existing_users_view`
 --
-DROP TABLE IF EXISTS `widok_uzytkownicy`;
+DROP TABLE IF EXISTS `existing_users_view`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `widok_uzytkownicy`  AS SELECT `audit_subscribers`.`subscriber_name` AS `subscriber_name`, `audit_subscribers`.`date_added` AS `date_added` FROM `audit_subscribers` ORDER BY `audit_subscribers`.`date_added` AS `DESCdesc` ASC  ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `existing_users_view`  AS SELECT DISTINCT `a`.`subscriber_name` AS `subscriber_name`, `a`.`date_added` AS `date_added` FROM `audit_subscribers` AS `a` WHERE `a`.`action_performed` = 'Insert a new subscriber'  ;
 
---
--- Indeksy dla zrzutów tabel
---
+-- --------------------------------------------------------
 
 --
--- Indeksy dla tabeli `audit_subscribers`
+-- Structure for view `deleted_users_view`
+--
+DROP TABLE IF EXISTS `deleted_users_view`;
+
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `deleted_users_view`  AS SELECT `audit_subscribers`.`subscriber_name` AS `subscriber_name`, max(`audit_subscribers`.`date_added`) AS `date_deleted` FROM `audit_subscribers` WHERE `audit_subscribers`.`action_performed` = 'Deleted a subscriber' GROUP BY `audit_subscribers`.`subscriber_name`  ;
+
+-- --------------------------------------------------------
+
+--
+-- Structure for view `users_view`
+--
+DROP TABLE IF EXISTS `users_view`;
+
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `users_view`  AS SELECT `audit_subscribers`.`subscriber_name` AS `subscriber_name`, `audit_subscribers`.`date_added` AS `date_added` FROM `audit_subscribers` ORDER BY `audit_subscribers`.`date_added` ASC  ;
+
+--
+-- Indexes for dumped tables
+--
+
+--
+-- Indexes for table `audit_subscribers`
 --
 ALTER TABLE `audit_subscribers`
   ADD PRIMARY KEY (`id`);
 
 --
--- Indeksy dla tabeli `subscribers`
+-- Indexes for table `subscribers`
 --
 ALTER TABLE `subscribers`
   ADD PRIMARY KEY (`id`);
 
 --
--- AUTO_INCREMENT dla zrzuconych tabel
+-- AUTO_INCREMENT for dumped tables
 --
 
 --
--- AUTO_INCREMENT dla tabeli `audit_subscribers`
+-- AUTO_INCREMENT for table `audit_subscribers`
 --
 ALTER TABLE `audit_subscribers`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=29;
 
 --
--- AUTO_INCREMENT dla tabeli `subscribers`
+-- AUTO_INCREMENT for table `subscribers`
 --
 ALTER TABLE `subscribers`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
